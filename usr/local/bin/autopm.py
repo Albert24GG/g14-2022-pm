@@ -92,7 +92,7 @@ def setGovernor(mode: str) -> None:
 def setCpuBoost(mode: str) -> None:
     cpu_boost = readFromFile("/sys/devices/system/cpu/cpufreq/boost")
 
-    if(int(cpu_boost) == power_modes[mode].boostclock):
+    if(int(cpu_boost) == power_modes[mode].boostclock or CHANGE_BOOST_ALLOWED == 0):
         return
 
     cpu_boost = power_modes[mode].boostclock
