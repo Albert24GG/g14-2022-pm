@@ -30,7 +30,7 @@ class PowerSettings(NamedTuple):
 
 power_modes: Dict[str, PowerSettings] = {
     # Power-Saver profile
-    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", 0) ,
+    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", 0),
     
     # Balanced profile
     "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "schedutil", 1),
@@ -99,6 +99,7 @@ def setPowerLimits(mode: str) -> None:
 
     opt: PowerSettings  = power_modes[mode]
     ryzenadj: str = f"ryzenadj -a {opt.a} -b {opt.b} -c {opt.c} -k {opt.k} -f {opt.f}"
+    runCommand(ryzenadj)
 
 
 def managePower() -> None:
