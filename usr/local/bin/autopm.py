@@ -1,5 +1,5 @@
 import time
-from typing import NamedTuple
+from typing import NamedTuple, Dict
 import sys
 import os
 import subprocess
@@ -37,16 +37,16 @@ class PowerSettings(NamedTuple):
     boostclock: bool  # enable CPU boost clocks (set 1 for on, 0 for off)
 
 
-# Power-Saver profile
-POWER_SAVER = PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", False)
-
-
-# Balanced profile
-BALANCED = PowerSettings(35000, 35000, 35000, 95000, 95, "schedutil", True)
-
-
-# Performance profile
-PERFORMANCE = PowerSettings(45000, 45000, 45000, 100000, 100, "performance", True)
+power_modes: Dict[str, PowerSettings] = {
+    # Power-Saver profile
+    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", False) ,
+    
+    # Balanced profile
+    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "schedutil", True),
+    
+    # Performance profile
+    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", True)
+}
 
 
 def runCommand(command: str) -> None:
