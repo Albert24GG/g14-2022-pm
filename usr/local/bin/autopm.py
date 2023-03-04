@@ -54,14 +54,14 @@ def runCommand(command: str) -> None:
 
 
 def getCommandOutput(command: str) -> str:
-    return subprocess.run(command, capture_output=True, shell=True).stdout
+    return subprocess.run(command, capture_output=True, shell=True).stdout.decode("utf-8").rstrip('\n')
 
 
 def readFromFile(path: str) -> str:
     file = open(path, 'r')
     text = file.read()
     file.close()
-    return text
+    return text.rstrip('\n')
 
 
 def writeToFile(path: str, content: str) -> None:
@@ -75,29 +75,31 @@ def setGovernor(mode: str) -> None:
     
     if(cpu_gov == power_modes[mode].governor):
         return
-    
+
     cpu_gov = power_modes[mode].governor
     
     print(f"{mode} profile: setting {cpu_gov} governor")
     
     dir_prefix: str = "/sys/devices/system/cpu/cpu"
     dir_suffix: str = "/cpufreq/scaling_governor" 
-    cpu_cores: int = getCommandOutput("grep -c processor /proc/cpuinfo")
+    cpu_cores: int = int(getCommandOutput("grep -c processor /proc/cpuinfo"))
     
     for coreNumb in range(0, cpu_cores):
-        path: str = dir_prefix + coreNumb + dir_suffix
+        path: str = dir_prefix + str(coreNumb) + dir_suffix
         writeToFile(path, cpu_gov)
 
 
 def setCpuBoost(mode: str) -> None:
     cpu_boost = readFromFile("/sys/devices/system/cpu/cpufreq/boost")
 
-    if(cpu_boost == power_modes[mode].boostclock):
+    if(int(cpu_boost) == power_modes[mode].boostclock):
         return
 
     cpu_boost = power_modes[mode].boostclock
 
-    writeToFile("/sys/devices/system/cpu/cpufreq/boost", cpu_boost)
+    print(f"{mode} profile: setting cpu boost {cpu_boost}")
+
+    writeToFile("/sys/devices/system/cpu/cpufreq/boost", str(cpu_boost))
 
 
 def managePower() -> None:
