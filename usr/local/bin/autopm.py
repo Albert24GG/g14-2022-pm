@@ -34,18 +34,18 @@ class PowerSettings(NamedTuple):
     k: int  # VRM EDC Current       (mA)
     f: int  # Max Tctl              (C)
     governor: str  # conservative ondemand userspace powersave performance schedutil
-    boostclock: bool  # enable CPU boost clocks (set 1 for on, 0 for off)
+    boostclock: int  # enable CPU boost clocks (set 1 for on, 0 for off)
 
 
 power_modes: Dict[str, PowerSettings] = {
     # Power-Saver profile
-    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", False) ,
+    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", 0) ,
     
     # Balanced profile
-    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "schedutil", True),
+    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "schedutil", 1),
     
     # Performance profile
-    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", True)
+    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", 1)
 }
 
 
@@ -89,10 +89,21 @@ def setGovernor(mode: str) -> None:
         writeToFile(path, cpu_gov)
 
 
+def setCpuBoost(mode: str) -> None:
+    cpu_boost = readFromFile("/sys/devices/system/cpu/cpufreq/boost")
+
+    if(cpu_boost == power_modes[mode].boostclock):
+        return
+
+    cpu_boost = power_modes[mode].boostclock
+
+    writeToFile("/sys/devices/system/cpu/cpufreq/boost", cpu_boost)
+
 
 def managePower() -> None:
     power_profile: str = getCommandOutput("powerprofilesctl get")
-
+    setGovernor(power_profile)
+    setCpuBoost(power_profile)
 
 
 def isRoot() -> bool:
