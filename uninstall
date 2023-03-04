@@ -7,4 +7,5 @@ fi
 systemctl disable --now autopm
 rm /etc/systemd/system/autopm.service
 rm /etc/systemd/system/upower_restart.service
+rm /etc/udev/rules.d/autopm.rules
 rm /usr/local/bin/autopm
