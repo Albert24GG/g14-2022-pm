@@ -67,13 +67,31 @@ def readFromFile(path: str) -> str:
 def writeToFile(path: str, content: str) -> None:
     file = open(path, 'w')
     file.write(content)
+    file.close()
+
+
+def setGovernor(mode: str) -> None:
+    cpu_gov: str = readFromFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+    
+    if(cpu_gov == power_modes[mode].governor):
+        return
+    
+    cpu_gov = power_modes[mode].governor
+    
+    print(f"{mode} profile: setting {cpu_gov} governor")
+    
+    dir_prefix: str = "/sys/devices/system/cpu/cpu"
+    dir_suffix: str = "/cpufreq/scaling_governor" 
+    cpu_cores: int = getCommandOutput("grep -c processor /proc/cpuinfo")
+    
+    for coreNumb in range(0, cpu_cores):
+        path: str = dir_prefix + coreNumb + dir_suffix
+        writeToFile(path, cpu_gov)
+
 
 
 def managePower() -> None:
     power_profile: str = getCommandOutput("powerprofilesctl get")
-    cpu_gov = readFromFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
-    ac_status = readFromFile("/sys/class/power_supply/AC0/online")
-    bat_status = readFromFile("/sys/class/power_supply/BAT0/status")
 
 
 
