@@ -1,12 +1,8 @@
-# GA402R on Fedora
+# G14 2022 Power Manager for Linux
 
 ---
 
-## UNMAINTAINED
-
-I leave this repo as it is, for archival purposes.
-
-It is not maintained anymore.
+This is a fork of https://gitlab.com/marcaux/asus-g14-2022
 
 ---
 
@@ -67,6 +63,6 @@ I also created a more quiet profile for the power saver profile. The fans kick i
 
 `usr/local/bin/autopm`
 
-adjusts the CPU gov depending on the power profile and if on AC / BAT while on the power saver profile
+adjusts the CPU gov and boost depending on the power profile
 
 ryzenadj and iGPU profiles can also be adjusted if needed
