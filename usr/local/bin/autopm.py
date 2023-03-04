@@ -102,10 +102,19 @@ def setCpuBoost(mode: str) -> None:
     writeToFile("/sys/devices/system/cpu/cpufreq/boost", str(cpu_boost))
 
 
+def setPowerLimits(mode: str) -> None:
+    if(RYZENADJ_ALLOWED == 0):
+        return 
+
+    opt: PowerSettings  = power_modes[mode]
+    ryzenadj: str = f"ryzenadj -a {opt.a} -b {opt.b} -c {opt.c} -k {opt.k} -f {opt.f}"
+
+
 def managePower() -> None:
     power_profile: str = getCommandOutput("powerprofilesctl get")
     setGovernor(power_profile)
     setCpuBoost(power_profile)
+    setPowerLimits(power_profile)
 
 
 def isRoot() -> bool:
@@ -122,3 +131,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
