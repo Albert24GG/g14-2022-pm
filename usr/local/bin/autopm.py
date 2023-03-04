@@ -4,17 +4,6 @@ import sys
 import os
 import subprocess
 
-# integrated/dedicated GPU number
-# either card1 or card0
-# ! IMPORTANT - an automated way has to be found
-# the order of those identifiers is not always the same
-# therefore GPU_PM_ALLOWED should be disabled for now
-# IGPU=card1
-# DGPU=card0
-
-# allow the change of power_dpm_force_performance_level
-# as of 5.18.13 "cat /sys/class/drm/card0/device/power_dpm_force_performance_level" wakes the dGPU up all the time so let's keep it disabled
-GPU_PM_ALLOWED = 0
 
 # One might want to have this 0 if another thing controls boost
 # There is a GNOME Shell extension where one can switch boost
