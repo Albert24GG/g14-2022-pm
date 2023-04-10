@@ -113,9 +113,18 @@ def isRoot() -> bool:
     return (os.getuid() == 0)
 
 
+def startup() -> None:
+    ac_status: str = readFromFile("/sys/class/power_supply/AC0/online")
+    if(int(ac_status) == 1): # Charger plugged
+        runCommand("powerprofilesctl set balanced")
+    else: # Running on battery
+        runCommand("powerprofilesctl set power-saver")
+
+
 def main() -> None:
     if not isRoot():
         sys.exit("Error: Script must be run as root")
+    startup()
     while True:
         managePower()
         time.sleep(10)
