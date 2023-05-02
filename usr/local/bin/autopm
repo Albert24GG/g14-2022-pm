@@ -48,6 +48,10 @@ def getCommandOutput(command: str) -> str:
     return subprocess.run(command, capture_output=True, shell=True).stdout.decode("utf-8").rstrip('\n')
 
 
+def print(output: str) -> None:
+    runCommand(f"echo \"{output}\"")
+
+
 def readFromFile(path: str) -> str:
     file = open(path, 'r')
     text = file.read()
