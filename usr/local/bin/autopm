@@ -24,17 +24,18 @@ class PowerSettings(NamedTuple):
     f: int  # Max Tctl              (C)
     governor: str  # conservative ondemand userspace powersave performance schedutil
     amd_epp: str  # change the epp mode (default performance balance_performance balance_power power)
+    amd_pstate: str # the amd_pstate driver mode (active, passive, guided)
 
 
 power_modes: Dict[str, PowerSettings] = {
     # Power-Saver profile
-    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "powersave", "power"),
+    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", "power", "passive"),
     
     # Balanced profile
-    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "powersave", "balance_performance"),
+    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "powersave", "balance_performance", "active"),
     
     # Performance profile
-    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", "performance")
+    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", "performance", "active")
 }
 
 
@@ -79,10 +80,17 @@ def setGovernor(mode: str) -> None:
     
     for coreNumb in range(0, cpu_cores):
         path: str = dir_prefix + str(coreNumb) + dir_suffix
-        writeToFile(path, cpu_gov)
+        try:
+            writeToFile(path, cpu_gov)
+        except:
+            print("Could not change current governor")
 
 
 def setEpp(mode: str) -> None:
+    current_pstate = readFromFile("/sys/devices/system/cpu/amd_pstate/status")
+    
+    if(current_pstate != "active"):
+        return
     current_epp = readFromFile("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference")
 
     if(current_epp == power_modes[mode].amd_epp or CHANGE_EPP_ALLOWED == 0):
@@ -104,11 +112,25 @@ def setPowerLimits(mode: str) -> None:
     runCommand(ryzenadj)
 
 
+def setPstate(mode: str) -> None:
+    current_pstate = readFromFile("/sys/devices/system/cpu/amd_pstate/status")
+    
+    if(current_pstate == power_modes[mode].amd_pstate):
+        return
+    
+    current_pstate = power_modes[mode].amd_pstate
+    
+    print(f"{mode} profile: setting amd_pstate to {current_pstate}")
+
+    writeToFile("/sys/devices/system/cpu/amd_pstate/status", current_pstate)
+
+
 def managePower() -> None:
     power_profile: str = getCommandOutput("powerprofilesctl get")
     setGovernor(power_profile)
     setEpp(power_profile)
     setPowerLimits(power_profile)
+    setPstate(power_profile)
 
 
 def isRoot() -> bool:
@@ -118,9 +140,9 @@ def isRoot() -> bool:
 def startup() -> None:
     ac_status: str = readFromFile("/sys/class/power_supply/AC0/online")
     if(int(ac_status) == 1): # Charger plugged
-        runCommand("powerprofilesctl set balanced")
+        runCommand("asusctl profile -P Balanced")
     else: # Running on battery
-        runCommand("powerprofilesctl set power-saver")
+        runCommand("asusctl profile -P Quiet")
 
 
 def main() -> None:
