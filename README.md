@@ -6,33 +6,37 @@ This is a fork of https://gitlab.com/marcaux/asus-g14-2022
 
 ---
 
-## status suspend
+Autopm is a python script that manages power settings such as the energy performance preferences(EPP) through amd-pstate driver and the scaling governors to optimize power consumption and performance when running on battery or AC. Optionally, ryzenadj and iGPU profiles can also be adjusted if needed.
 
-### s0ix
+## Install
 
-- finally works from kernel 6.1 (or before release the current ROG / G14 kernel) and up
+### 1. Enable amd-pstate-epp
+This can be done by adding some kernel parameters to the grub config file:
+```sh 
+sudo vim /etc/default/grub 
+```
+Then edit the `GRUB_CMDLINE_LINUX_DEFAULT` line:
+```sh 
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amd_pstate=active"
+```
+The last step is to regenerate the grub config:
+```sh 
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
 
-For reference:
+### 2. Install the script
+```sh 
+git clone https://github.com/Albert24GG/g14-2022-pm.git
+cd g14-2022-pm
+chmod +x install 
+sudo ./install
+```
+## Uninstall
+```sh 
+chmod +x uninstall 
+sudo ./uninstall
+```
 
-- https://www.phoronix.com/news/AMD-s2idle-Rembrandt-ASUS
-- https://lore.kernel.org/lkml/a5f1976a3b8e905a09ebb08f3baad0996101c5bb.camel@ljones.dev/
-
-## GPU freezes
-
-There are still some issues around the GPU under Linux that are not resolved.
-
-The system could hang and crash at times (for some not at all, for others once a day).
-
-It could be that the combination of power management, VAAPI, GPU firmware and Mesa lead to this issue but it is not clear and the AMD issue tracker is not marked as solved, yet.
-
-For reference:
-
-- https://gitlab.freedesktop.org/drm/amd/-/issues/2068
-
-## scripts and quirks
-
-- `sudo ./install` to install
-- `sudo ./uninstall` to uninstall
 
 ### fan-curves
 
@@ -57,12 +61,3 @@ By default the profiles are disabled. Enable them via `asusctl fan-curve -m bala
 
 I also created a more quiet profile for the power saver profile. The fans kick in a little later than usual so they don't spin up and down so often during my daily tasks.
 
-### autopm
-
-`etc/systemd/system/autopm.service`
-
-`usr/local/bin/autopm`
-
-adjusts the CPU gov and boost depending on the power profile
-
-ryzenadj and iGPU profiles can also be adjusted if needed

@@ -7,10 +7,8 @@ import os
 import subprocess
 
 
-# One might want to have this 0 if another thing controls boost
-# There is a GNOME Shell extension where one can switch boost
-#    on / off for example
-CHANGE_BOOST_ALLOWED = 0
+# One might want to have this 0 if another thing controls epp mode
+CHANGE_EPP_ALLOWED = 1
 
 # One might not want to have ryzenadj values changed
 # Silverblue users for example can't install it globally atm
@@ -25,18 +23,18 @@ class PowerSettings(NamedTuple):
     k: int  # VRM EDC Current       (mA)
     f: int  # Max Tctl              (C)
     governor: str  # conservative ondemand userspace powersave performance schedutil
-    boostclock: int  # enable CPU boost clocks (set 1 for on, 0 for off)
+    amd_epp: str  # change the epp mode (default performance balance_performance balance_power power)
 
 
 power_modes: Dict[str, PowerSettings] = {
     # Power-Saver profile
-    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", 0),
+    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "powersave", "power"),
     
     # Balanced profile
-    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "schedutil", 1),
+    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "powersave", "balance_performance"),
     
     # Performance profile
-    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", 1)
+    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", "performance")
 }
 
 
@@ -84,17 +82,17 @@ def setGovernor(mode: str) -> None:
         writeToFile(path, cpu_gov)
 
 
-def setCpuBoost(mode: str) -> None:
-    cpu_boost = readFromFile("/sys/devices/system/cpu/cpufreq/boost")
+def setEpp(mode: str) -> None:
+    current_epp = readFromFile("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference")
 
-    if(int(cpu_boost) == power_modes[mode].boostclock or CHANGE_BOOST_ALLOWED == 0):
+    if(current_epp == power_modes[mode].amd_epp or CHANGE_EPP_ALLOWED == 0):
         return
 
-    cpu_boost = power_modes[mode].boostclock
+    current_epp = power_modes[mode].amd_epp
 
-    print(f"{mode} profile: setting cpu boost {cpu_boost}")
+    print(f"{mode} profile: setting epp to {current_epp}")
 
-    writeToFile("/sys/devices/system/cpu/cpufreq/boost", str(cpu_boost))
+    writeToFile("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference", current_epp)
 
 
 def setPowerLimits(mode: str) -> None:
@@ -109,7 +107,7 @@ def setPowerLimits(mode: str) -> None:
 def managePower() -> None:
     power_profile: str = getCommandOutput("powerprofilesctl get")
     setGovernor(power_profile)
-    setCpuBoost(power_profile)
+    setEpp(power_profile)
     setPowerLimits(power_profile)
 
 
