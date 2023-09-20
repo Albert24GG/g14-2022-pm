@@ -6,5 +6,6 @@ fi
 
 cp etc/systemd/system/* /etc/systemd/system/
 cp usr/local/bin/autopm /usr/local/bin/
+cp etc/udev/rules.d/autopm.rules /etc/udev/rules.d/
 chmod +x /usr/local/bin/autopm
 systemctl enable --now autopm
