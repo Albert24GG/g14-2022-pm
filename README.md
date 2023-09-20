@@ -9,6 +9,9 @@ This is a fork of https://gitlab.com/marcaux/asus-g14-2022
 Autopm is a python script that manages power settings such as the energy performance preferences(EPP) through amd-pstate driver and the scaling governors to optimize power consumption and performance when running on battery or AC. Optionally, ryzenadj and iGPU profiles can also be adjusted if needed.
 
 ## Install
+### Requirements
+- asusctl
+- power-profiles-daemon
 
 ### 1. Enable amd-pstate-epp
 This can be done by adding some kernel parameters to the grub config file:
