@@ -1,6 +1,6 @@
 [Unit]
 Description=auto power management
-Before=graphical.target
+After=asusd.service power-profiles-daemon.service
 
 [Service]
 User=root
