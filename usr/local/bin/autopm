@@ -29,13 +29,13 @@ class PowerSettings(NamedTuple):
 
 power_modes: Dict[str, PowerSettings] = {
     # Power-Saver profile
-    "power-saver" : PowerSettings(7000, 7000, 7000, 90000, 85, "conservative", "power", "passive"),
+    "power-saver" : PowerSettings(7000, 8000, 7000, 90000, 85, "conservative", "power", "passive"),
     
     # Balanced profile
-    "balanced"    : PowerSettings(35000, 35000, 35000, 95000, 95, "powersave", "balance_performance", "active"),
+    "balanced"    : PowerSettings(35000, 45000, 38000, 95000, 95, "powersave", "balance_performance", "active"),
     
     # Performance profile
-    "performance" : PowerSettings(45000, 45000, 45000, 100000, 100, "performance", "performance", "active")
+    "performance" : PowerSettings(45000, 55000, 50000, 100000, 100, "performance", "performance", "active")
 }
 
 
