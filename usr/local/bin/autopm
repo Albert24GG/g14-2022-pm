@@ -38,6 +38,8 @@ power_modes: Dict[str, PowerSettings] = {
     "performance" : PowerSettings(45000, 55000, 50000, 100000, 100, "performance", "performance", "active")
 }
 
+current_power_profile: str = ""
+
 
 def runCommand(command: str) -> None:
     subprocess.run(command, shell=True)
@@ -110,6 +112,8 @@ def setPowerLimits(mode: str) -> None:
     opt: PowerSettings  = power_modes[mode]
     ryzenadj: str = f"ryzenadj -a {opt.a} -b {opt.b} -c {opt.c} -k {opt.k} -f {opt.f}"
     runCommand(ryzenadj)
+    time.sleep(1)
+    runCommand(ryzenadj)
 
 
 def setPstate(mode: str) -> None:
@@ -127,10 +131,17 @@ def setPstate(mode: str) -> None:
 
 def managePower() -> None:
     power_profile: str = getCommandOutput("powerprofilesctl get")
-    setGovernor(power_profile)
-    setEpp(power_profile)
-    setPowerLimits(power_profile)
+    global current_power_profile
+    
+    if(current_power_profile == power_profile):
+        return
+
+    current_power_profile = power_profile
+
     setPstate(power_profile)
+    setEpp(power_profile)
+    setGovernor(power_profile)
+    setPowerLimits(power_profile)
 
 
 def isRoot() -> bool:
