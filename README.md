@@ -12,6 +12,7 @@ Autopm is a python script that manages power settings such as the energy perform
 ### Requirements
 - asusctl
 - power-profiles-daemon
+- ryzenadj(optional)
 
 ### 1. Enable amd-pstate-epp
 This can be done by adding some kernel parameters to the grub config file:
@@ -26,6 +27,8 @@ The last step is to regenerate the grub config:
 ```sh 
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 ```
+### 1.1 (Optional)
+To ensure ryzenadj will work properly, set the `iomem=relaxed` kernel parameter in the bootloader config file.
 
 ### 2. Install the script
 ```sh 
