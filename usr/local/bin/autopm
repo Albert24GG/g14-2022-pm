@@ -17,11 +17,7 @@ RYZENADJ_ALLOWED = 0
 
 
 class PowerSettings(NamedTuple):
-    a: int  # Sustained Power Limit (mW)
-    b: int  # ACTUAL Power Limit    (mW)
-    c: int  # Average Power Limit   (mW)
-    k: int  # VRM EDC Current       (mA)
-    f: int  # Max Tctl              (C)
+    ryzenadj_params: str  # parameters to use when calling ryzenadj
     governor: str  # conservative ondemand userspace powersave performance schedutil
     amd_epp: str  # change the epp mode (default performance balance_performance balance_power power)
     amd_pstate: str  # the amd_pstate driver mode (active, passive, guided)
@@ -30,15 +26,24 @@ class PowerSettings(NamedTuple):
 power_modes: Dict[str, PowerSettings] = {
     # Power-Saver profile
     "power-saver": PowerSettings(
-        7000, 8000, 7000, 90000, 85, "powersave", "power", "active"
+        "--tctl-temp=95 --apu-skin-temp=45 --stapm-limit=6000  --fast-limit=6000 --stapm-time=64 --slow-limit=6000 --slow-time=128 --vrm-current=180000 --vrmmax-current=180000 --vrmsoc-current=180000 --vrmsocmax-current=180000 --vrmgfx-current=180000",
+        "powersave",
+        "power",
+        "active",
     ),
     # Balanced profile
     "balanced": PowerSettings(
-        35000, 45000, 38000, 95000, 95, "powersave", "balance_performance", "active"
+        "--tctl-temp=95 --apu-skin-temp=45 --stapm-limit=35000  --fast-limit=45000 --stapm-time=64 --slow-limit=38000 --slow-time=128 --vrm-current=180000 --vrmmax-current=180000 --vrmsoc-current=180000 --vrmsocmax-current=180000 --vrmgfx-current=180000",
+        "powersave",
+        "balance_performance",
+        "active",
     ),
     # Performance profile
     "performance": PowerSettings(
-        45000, 55000, 50000, 100000, 100, "performance", "performance", "active"
+        "--tctl-temp=95 --apu-skin-temp=95 --stapm-limit=45000  --fast-limit=55000 --stapm-time=64 --slow-limit=50000 --slow-time=128 --vrm-current=180000 --vrmmax-current=180000 --vrmsoc-current=180000 --vrmsocmax-current=180000 --vrmgfx-current=180000",
+        "performance",
+        "performance",
+        "active",
     ),
 }
 
@@ -120,12 +125,7 @@ def setEpp(mode: str) -> None:
 def setPowerLimits(mode: str) -> None:
     if RYZENADJ_ALLOWED == 0:
         return
-
-    opt: PowerSettings = power_modes[mode]
-    ryzenadj: str = f"ryzenadj -a {opt.a} -b {opt.b} -c {opt.c} -k {opt.k} -f {opt.f}"
-    runCommand(ryzenadj)
-    time.sleep(1)
-    runCommand(ryzenadj)
+    runCommand("ryzenadj " + power_modes[mode].ryzenadj_params)
 
 
 def setPstate(mode: str) -> None:
@@ -172,6 +172,7 @@ def main() -> None:
     if not isRoot():
         sys.exit("Error: Script must be run as root")
     startup()
+    time.sleep(5)
     while True:
         managePower()
         time.sleep(10)
