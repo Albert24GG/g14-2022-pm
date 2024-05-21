@@ -24,18 +24,22 @@ class PowerSettings(NamedTuple):
     f: int  # Max Tctl              (C)
     governor: str  # conservative ondemand userspace powersave performance schedutil
     amd_epp: str  # change the epp mode (default performance balance_performance balance_power power)
-    amd_pstate: str # the amd_pstate driver mode (active, passive, guided)
+    amd_pstate: str  # the amd_pstate driver mode (active, passive, guided)
 
 
 power_modes: Dict[str, PowerSettings] = {
     # Power-Saver profile
-    "power-saver" : PowerSettings(7000, 8000, 7000, 90000, 85, "conservative", "power", "passive"),
-    
+    "power-saver": PowerSettings(
+        7000, 8000, 7000, 90000, 85, "powersave", "power", "active"
+    ),
     # Balanced profile
-    "balanced"    : PowerSettings(35000, 45000, 38000, 95000, 95, "powersave", "balance_performance", "active"),
-    
+    "balanced": PowerSettings(
+        35000, 45000, 38000, 95000, 95, "powersave", "balance_performance", "active"
+    ),
     # Performance profile
-    "performance" : PowerSettings(45000, 55000, 50000, 100000, 100, "performance", "performance", "active")
+    "performance": PowerSettings(
+        45000, 55000, 50000, 100000, 100, "performance", "performance", "active"
+    ),
 }
 
 current_power_profile: str = ""
@@ -46,79 +50,78 @@ def runCommand(command: str) -> None:
 
 
 def getCommandOutput(command: str) -> str:
-    return subprocess.run(command, capture_output=True, shell=True).stdout.decode("utf-8").rstrip('\n')
+    return (
+        subprocess.run(command, capture_output=True, shell=True)
+        .stdout.decode("utf-8")
+        .rstrip("\n")
+    )
 
 
 def print(output: str) -> None:
-    runCommand(f"echo \"{output}\"")
+    runCommand(f'echo "{output}"')
 
 
 def readFromFile(path: str) -> str:
-    file = open(path, 'r')
-    text = file.read()
-    file.close()
-    return text.rstrip('\n')
+    with open(path, "r") as file:
+        return file.read().rstrip("\n")
 
 
 def writeToFile(path: str, content: str) -> None:
-    file = open(path, 'w')
-    file.write(content)
-    file.close()
+    with open(path, "w") as file:
+        file.write(content)
 
 
 def setGovernor(mode: str) -> None:
     cpu_gov: str = readFromFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
-    
-    if(cpu_gov == power_modes[mode].governor):
+
+    if cpu_gov == power_modes[mode].governor:
         return
 
     cpu_gov = power_modes[mode].governor
-    
+
     print(f"{mode} profile: setting {cpu_gov} governor")
-    
-    dir_prefix: str = "/sys/devices/system/cpu/cpu"
-    dir_suffix: str = "/cpufreq/scaling_governor" 
-    cpu_cores: int = int(getCommandOutput("grep -c processor /proc/cpuinfo"))
-    
+
+    cpu_cores: int = int(getCommandOutput("nproc --all"))
+    path: str = "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor"
+
     for coreNumb in range(0, cpu_cores):
-        path: str = dir_prefix + str(coreNumb) + dir_suffix
         try:
-            writeToFile(path, cpu_gov)
+            writeToFile(path.format(coreNumb), cpu_gov)
         except:
             print("Could not change current governor")
 
 
 def setEpp(mode: str) -> None:
     current_pstate = readFromFile("/sys/devices/system/cpu/amd_pstate/status")
-    
-    if(current_pstate != "active"):
-        return
-    current_epp = readFromFile("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference")
 
-    if(current_epp == power_modes[mode].amd_epp or CHANGE_EPP_ALLOWED == 0):
+    if current_pstate != "active":
+        return
+    current_epp = readFromFile(
+        "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference"
+    )
+
+    if current_epp == power_modes[mode].amd_epp or CHANGE_EPP_ALLOWED == 0:
         return
 
     current_epp = power_modes[mode].amd_epp
 
     print(f"{mode} profile: setting epp to {current_epp}")
 
-    dir_prefix: str = "/sys/devices/system/cpu/cpu"
-    dir_suffix: str = "/cpufreq/energy_performance_preference" 
-    cpu_cores: int = int(getCommandOutput("grep -c processor /proc/cpuinfo"))
-    
+    cpu_cores: int = int(getCommandOutput("nproc --all"))
+    path: str = "/sys/devices/system/cpy/cpu{}/cpufreq/energy_performance_preference"
+
     for coreNumb in range(0, cpu_cores):
-        path: str = dir_prefix + str(coreNumb) + dir_suffix
         try:
-            writeToFile(path, current_epp)
+            writeToFile(path.format(coreNumb), current_epp)
         except:
             print("Could not change current epp")
 
 
 def setPowerLimits(mode: str) -> None:
-    if(RYZENADJ_ALLOWED == 0):
-        return 
+    if RYZENADJ_ALLOWED == 0:
+        return
 
-    opt: PowerSettings  = power_modes[mode]
+    opt: PowerSettings = power_modes[mode]
     ryzenadj: str = f"ryzenadj -a {opt.a} -b {opt.b} -c {opt.c} -k {opt.k} -f {opt.f}"
     runCommand(ryzenadj)
     time.sleep(1)
@@ -127,12 +130,12 @@ def setPowerLimits(mode: str) -> None:
 
 def setPstate(mode: str) -> None:
     current_pstate = readFromFile("/sys/devices/system/cpu/amd_pstate/status")
-    
-    if(current_pstate == power_modes[mode].amd_pstate):
+
+    if current_pstate == power_modes[mode].amd_pstate:
         return
-    
+
     current_pstate = power_modes[mode].amd_pstate
-    
+
     print(f"{mode} profile: setting amd_pstate to {current_pstate}")
 
     writeToFile("/sys/devices/system/cpu/amd_pstate/status", current_pstate)
@@ -141,8 +144,8 @@ def setPstate(mode: str) -> None:
 def managePower() -> None:
     power_profile: str = getCommandOutput("powerprofilesctl get")
     global current_power_profile
-    
-    if(current_power_profile == power_profile):
+
+    if current_power_profile == power_profile:
         return
 
     current_power_profile = power_profile
@@ -154,14 +157,14 @@ def managePower() -> None:
 
 
 def isRoot() -> bool:
-    return (os.getuid() == 0)
+    return os.getuid() == 0
 
 
 def startup() -> None:
     ac_status: str = readFromFile("/sys/class/power_supply/AC0/online")
-    if(int(ac_status) == 1): # Charger plugged
+    if int(ac_status) == 1:  # Charger plugged
         runCommand("asusctl profile -P Balanced")
-    else: # Running on battery
+    else:  # Running on battery
         runCommand("asusctl profile -P Quiet")
 
 
@@ -176,4 +179,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
